@@ -5,4 +5,4 @@ RUN apt-get install nginx -y
 COPY index.html /var/www/html
 ENTRYPOINT tail -f /dev/null
 WORKDIR /var/www/html 
-CMD ["-m" , "nginx", "run", "daemon off;"]
+CMD ["-m" , "nginx", "run"]
