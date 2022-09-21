@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: mycontainer
-          image: www.nexuspipeline.tk:8085/mysecond:latest
+          image: www.nexuspipeline.tk:8085/mysecond:1.1
           imagePullPolicy: Always
           ports:
             - name: mycontainer
