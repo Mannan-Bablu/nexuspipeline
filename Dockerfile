@@ -5,5 +5,5 @@ RUN apt-get install nginx -y
 COPY index.html /var/www/html
 WORKDIR /var/www/html 
 ENTRYPOINT tail -f /dev/null
-ENTRYPOINT service nginx restart && bash
+ENTRYPOINT service nginx start && bash
 
