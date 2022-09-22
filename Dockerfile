@@ -3,9 +3,5 @@ MAINTAINER admin@evoke.net
 RUN apt-get update
 RUN apt-get install nginx -y
 COPY index.html /var/www/html
-WORKDIR /var/www/html 
 ENTRYPOINT tail -f /dev/null
-CMD service nginx start 
-
-
-
+WORKDIR /var/www/html
