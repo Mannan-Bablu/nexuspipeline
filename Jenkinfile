@@ -1,42 +1,55 @@
 pipeline {
     agent any
-
+    
+    environment {
+        imageName = "mysecond"
+        registryCredentials = "NEXUS_CRED1"
+        registry = "www.nexuspipeline.tk:8085"
+        dockerImage = ''
+    }
     stages {
-        stage('Git checkout') {
+        stage('Code checkout') {
             steps {
                 // Get some code from a GitHub repository
-                git 'https://github.com/Mannan-Bablu/nexuspipeline.git'
+               git 'https://github.com/Mannan-Bablu/nexuspipeline.git'
             }
-        }   
-    	stage('Create-Image') {
-                // Build the images from dockerfile
-     	    steps {
-                sh 'docker build -t="mynginx:latest" .'
+        }
+        stage('Building image') {
+            steps{
+                script {
+                    dockerImage = docker.build imageName
+                }
+            }    
+        }
+        stage('Uploading to Nexus') {
+            steps{  
+                script {
+                    docker.withRegistry( 'http://'+registry, registryCredentials ) {
+                    dockerImage.push('1.1')}
+                }
             }
-        }   
-        stage('Nexus-Credentials') {
-    	    steps {
-               script {
-    	       	    nexusArtifactUploader credentialsId: 'nexus3', 
-     	       	    nexusUrl: '3.88.202.11:8081', 
-     	       	    nexusVersion: 'nexus3', 
-     	       	    protocol: 'http',
-     	       	    repository: 'nexus', 
-    	       }
-            }
-        }   			
-        stage('Nexus-Push') {
+        }
+        stage('nexus pull') {
+            steps{
+                script {
+                    'docker pull www.nexuspipeline.tk:8085/mysecond '
+                }   
+            }    
+        }
+        stage('deploy on kubernetes') {
             steps {
-    	    	sh 'docker login -u 8184848757 -p Maroct-341 http://3.88.202.11:8081/repository/nexus'
-    	    	sh 'docker push http://3.88.202.11:8081/repository/nexus/mynginx:latest'
-    	    	sh 'docker rmi $(docker images --filter=reference="http://3.88.202.11:8081/repository/nexus/mynginx:latest*" -q)'
-    	    	sh 'docker logout http://3.88.202.11:8081/repository/nexus' 
-            }   
-        }   
-        stage('create-container') {
-    	    steps {
-    	        sh 'docker run -d -p 95:80 -v /home/ubuntu:/var/www/html mynginx:latest'
-    	    }
+                //sshagent(['k8-master']) {
+                sshagent(['cali']) {
+                    sh "scp -o StrictHostKeyChecking=no Manifest/*.yaml ubuntu@13.57.239.6:/home/ubuntu"
+                    script{
+                        try{
+                            sh "ssh ubuntu@13.57.239.6 kubectl apply -f ."
+                           }catch(error){
+                            sh "ssh ubuntu@13.57.239.6 kubectl create -f ."
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
-}
